@@ -1,1 +1,8 @@
-{"author":"Office Express","build":{"appId":"com.officeexpress.app","copyright":"Copyright © 2026 Office Express","directories":{"output":"dist"},"dmg":{"window":{"height":380,"width":540}},"files":["main.js","preload.js","renderer/**/*","assets/icon.png","assets/icon.svg","package.json"],"mac":{"category":"public.app-category.productivity","icon":"assets/icon.png","target":"dmg"},"nsis":{"allowToChangeInstallationDirectory":true,"createDesktopShortcut":true,"createStartMenuShortcut":true,"oneClick":false,"shortcutName":"Office Express"},"productName":"Office Express","win":{"icon":"assets/icon.png","target":"nsis"}},"description":"Office Express — navegador ligero para Google Workspace (Documentos, Hojas de cálculo, Presentaciones, Drive, Gmail y más) en Windows y macOS.","devDependencies":{"electron":"^33.2.1","electron-builder":"^25.1.8"},"license":"MIT","main":"main.js","name":"office-express","scripts":{"dist":"electron-builder","dist:dir":"electron-builder --dir","dist:mac":"electron-builder --mac","dist:win":"electron-builder --win","start":"electron ."},"version":"1.0.0"}
+{
+  "author": "Office Express",
+  "description": "Office Express — navegador ligero para Google Workspace (Documentos, Hojas de cálculo, Presentaciones, Drive, Gmail y más) en Windows y macOS.",
+  "license": "MIT",
+  "main": "main.js",
+  "name": "office-express",
+  "version": "1.1.0"
+}

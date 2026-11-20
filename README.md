@@ -24,10 +24,48 @@ el perfil de Electron de cada usuario, en su propio equipo.
 ## Instalar (Windows y Mac)
 
 1. Descarga el instalador de la última versión (Releases):
-   - Windows: `Office Express Setup 1.0.0.exe` — instalador NSIS.
-   - macOS: `Office Express-1.0.0.dmg` — arrastra la app a Aplicaciones.
+   - Windows: `Office Express Setup 1.1.0.exe` — instalador NSIS.
+   - macOS: `Office Express-1.1.0.dmg` — arrastra la app a Aplicaciones.
 2. Abre Office Express, toca una app e inicia sesión con tu cuenta
    de Google dentro de la app. Listo.
+
+## Inicio de sesión con Google
+
+Google bloquea el inicio de sesión desde navegadores embebidos ("This
+browser or app may not be secure", error 403 `disallowed_useragent`), y
+además rechaza un User-Agent de Chrome "pelado": compara la identidad de
+la petición con la del JavaScript de la página, y en Electron
+`window.chrome` es un objeto vacío y no hay client hints. Por eso la app
+presenta la identidad completa y consistente del Chromium que ya trae,
+en tres capas (`main.js` + `google-identity-preload.js`):
+
+1. **User-Agent de Chrome de escritorio** con versión reducida
+   (`Chrome/<mayor>.0.0.0`), sin los tokens `Electron` ni de la app,
+   en cada pestaña (BrowserView).
+2. **Client hints** (`Sec-CH-UA`, `Sec-CH-UA-Mobile`, `Sec-CH-UA-Platform`)
+   en las peticiones a Google.
+3. **Identidad JavaScript**: `navigator.userAgentData` (marcas de Chrome)
+   y `window.chrome` (`app`, `csi`, `loadTimes`, `runtime`) inyectados al
+   inicio del documento, solo en páginas de Google.
+
+Verificado con la prueba de humo (`npm start` con `--smoke-test`): la
+página de sign-in de Google carga el formulario y Google sirve el flujo
+estándar (`GlifWebSignIn`), no el flujo degradado que servía antes
+(`WebLiteSignIn`) ni el error de navegador no seguro.
+
+**Qué puede fallar todavía (honesto):**
+- La detección de Google es un objetivo móvil: puede endurecerla en el
+  futuro y volver a pedir verificación. Si eso pasa, hay que actualizar
+  la identidad a la versión de Chromium que traiga Electron entonces.
+- La primera vez, Google puede pedir verificación adicional (código,
+  confirmación en el teléfono) como con cualquier navegador nuevo.
+- **No se pudo probar un login completo**: hace falta una cuenta real de
+  Google, y la app no guarda ni pide contraseñas. Esa prueba queda
+  pendiente de hacer con la cuenta de cada usuario.
+- Si Google llegara a bloquear de nuevo el sign-in dentro de la app, la
+  alternativa es iniciar sesión en el navegador real (Chrome) — pero la
+  sesión de Chrome no se puede pasar a la app, así que habría que usar
+  la versión web de Office Express en ese caso.
 
 > **Aviso de instalador sin firmar:** los instaladores de la primera
 > versión no están firmados con certificado. Windows (SmartScreen) y
@@ -72,9 +110,10 @@ cuando se decida.
 ## Estructura
 
 ```
-main.js            Proceso principal (ventana, pestañas, BrowserView)
-preload.js         Puente seguro renderer <-> main
-renderer/          Home táctil + pestañas (index.html, styles.css, renderer.js)
+main.js                    Proceso principal (ventana, pestañas, BrowserView, identidad Chrome)
+preload.js                 Puente seguro renderer <-> main
+google-identity-preload.js Identidad Chrome en las pestañas (userAgentData + window.chrome)
+renderer/                  Home táctil + pestañas (index.html, styles.css, renderer.js)
 web/               Versión web estática (index.html, styles.css, app.js, vercel.json)
 assets/icon.png    Logo de la app (512×512, se sube por web de GitHub)
 assets/icon.svg    Logo en vector

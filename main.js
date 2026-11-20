@@ -7,7 +7,7 @@
  *   Electron del usuario y no se pierde al cerrar la app.
  * - Sin login propio y sin guardar contraseñas en la app.
  */
-const { app, BrowserWindow, BrowserView, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, session, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -15,6 +15,54 @@ const PARTITION = 'persist:office-express';
 const HOME_URL = 'https://docs.google.com/document/u/0/';
 const SMOKE_TEST = process.argv.includes('--smoke-test');
 const SMOKE_OUT = process.env.SMOKE_OUT || '/tmp/office-express-smoke.json';
+
+// --- Identidad de Chrome para el inicio de sesión con Google ---
+// Google bloquea el sign-in desde navegadores embebidos ("This browser or
+// app may not be secure", 403 disallowed_useragent). Pero un User-Agent de
+// Chrome "pelado", sin más, también lo rechaza: Google compara la identidad
+// de la petición (UA + client hints) con la del JavaScript de la página
+// (navigator.userAgentData y window.chrome), y en Electron window.chrome
+// es un objeto vacío y no hay client hints. Por eso se cubren las tres
+// capas de forma consistente, con el Chromium real que trae Electron, sin
+// inventar otro navegador:
+//   1. UA de Chrome de escritorio con versión reducida (Chrome/<mayor>.0.0.0),
+//      sin los tokens "Electron" ni de la app.
+//   2. Cabeceras Sec-CH-UA (client hints) en las peticiones a Google.
+//   3. navigator.userAgentData + window.chrome en las páginas de Google,
+//      inyectados al inicio del documento (google-identity-preload.js).
+// Advertencia honesta: es un objetivo móvil — Google puede endurecer la
+// detección en el futuro; ver README, "Inicio de sesión con Google".
+const CHROME_MAJOR = parseInt((process.versions.chrome || '130').split('.')[0], 10) || 130;
+const CHROME_VERSION = `${CHROME_MAJOR}.0.0.0`;
+const PLATFORM_TOKEN = process.platform === 'darwin'
+  ? 'Macintosh; Intel Mac OS X 10_15_7'
+  : process.platform === 'win32'
+    ? 'Windows NT 10.0; Win64; x64'
+    : 'X11; Linux x86_64';
+const CHROME_UA = `Mozilla/5.0 (${PLATFORM_TOKEN}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_VERSION} Safari/537.36`;
+const CH_PLATFORM = process.platform === 'darwin' ? 'macOS' : process.platform === 'win32' ? 'Windows' : 'Linux';
+
+// Fallback para todos los webContents creados después de este punto.
+app.userAgentFallback = CHROME_UA;
+
+function configureGoogleSession() {
+  const appSession = session.fromPartition(PARTITION);
+  appSession.setUserAgent(CHROME_UA);
+  // Client hints que Chrome envía con cada petición. Un UA completo de
+  // Chrome sin client hints es una marca de navegador sintético.
+  appSession.webRequest.onBeforeSendHeaders(
+    { urls: ['*://*.google.com/*', '*://*.gstatic.com/*', '*://*.googleusercontent.com/*', '*://*.googleapis.com/*'] },
+    (details, callback) => {
+      const headers = details.requestHeaders;
+      if (!headers['Sec-CH-UA']) {
+        headers['Sec-CH-UA'] = `"Google Chrome";v="${CHROME_MAJOR}", "Chromium";v="${CHROME_MAJOR}", "Not-A.Brand";v="99"`;
+      }
+      if (!headers['Sec-CH-UA-Mobile']) headers['Sec-CH-UA-Mobile'] = '?0';
+      if (!headers['Sec-CH-UA-Platform']) headers['Sec-CH-UA-Platform'] = `"${CH_PLATFORM}"`;
+      callback({ requestHeaders: headers });
+    }
+  );
+}
 
 // Altura (px) de la barra superior táctil (pestañas + navegación).
 const CHROME_HEIGHT = 128;
@@ -105,7 +153,8 @@ function createTab(url, title) {
     webPreferences: {
       partition: PARTITION,
       contextIsolation: true,
-      sandbox: true
+      sandbox: true,
+      preload: path.join(__dirname, 'google-identity-preload.js')
     }
   });
   const tab = { id, title: title || 'Cargando…', url, view, isHome: false };
@@ -183,6 +232,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  configureGoogleSession();
   createWindow();
 
   app.on('activate', () => {
@@ -190,14 +240,46 @@ app.whenReady().then(() => {
   });
 
   if (SMOKE_TEST) {
-    // Prueba de humo: verifica que el home renderiza y que
-    // docs.google.com carga dentro de una pestaña (BrowserView).
-    const result = { homeReady: false, docsLoaded: false, docsUrl: '', docsTitle: '', error: null };
+    // Prueba de humo + sonda de inicio de sesión con Google: verifica que
+    // el home renderiza, que docs.google.com carga en una pestaña y que la
+    // página de sign-in de Google muestra el formulario (no el bloqueo
+    // "This browser or app may not be secure" / 403 disallowed_useragent).
+    // También reporta la identidad que ve Google: User-Agent, client hints
+    // (navigator.userAgentData) y window.chrome.
+    const result = { homeReady: false, docsLoaded: false, docsUrl: '', docsTitle: '', probe: null, blocked: null, error: null };
     const deadline = setTimeout(() => {
       result.error = 'timeout esperando carga';
       finishSmoke(result, 1);
-    }, 90000);
+    }, 120000);
     deadline.unref();
+
+    const PROBE_JS = `(() => {
+      const txt = (document.body ? document.body.innerText : '').slice(0, 1500);
+      const lower = txt.toLowerCase();
+      let uaData = null;
+      try {
+        const d = navigator.userAgentData;
+        uaData = d ? { brands: d.brands, mobile: d.mobile, platform: d.platform } : null;
+      } catch (e) { uaData = { error: String(e) }; }
+      return {
+        url: location.href,
+        title: document.title,
+        userAgent: navigator.userAgent,
+        uaData,
+        chromeKeys: window.chrome ? Object.keys(window.chrome) : null,
+        chromeApp: !!(window.chrome && window.chrome.app),
+        chromeLoadTimes: !!(window.chrome && typeof window.chrome.loadTimes === 'function'),
+        hasEmailInput: !!document.querySelector('input[type="email"]'),
+        hasIdentifierInput: !!document.querySelector('input[name="identifier"]'),
+        flowName: (new URLSearchParams(location.search).get('flowName') || ''),
+        hasPasswordInput: !!document.querySelector('input[type="password"]'),
+        bodyHasNotSecure: lower.includes('may not be secure')
+          || lower.includes("couldn't sign you in")
+          || lower.includes('no es seguro')
+          || lower.includes('no se pudo iniciar sesión'),
+        bodySnippet: txt.replace(/\\s+/g, ' ').slice(0, 500)
+      };
+    })()`;
 
     ipcMain.once('renderer-ready', () => {
       homeReady = true;
@@ -207,7 +289,18 @@ app.whenReady().then(() => {
         result.docsLoaded = true;
         result.docsUrl = tab.view.webContents.getURL();
         result.docsTitle = tab.view.webContents.getTitle();
-        finishSmoke(result, 0);
+        // La página de sign-in renderiza su formulario de forma asíncrona;
+        // esperar unos segundos antes de leer el contenido.
+        setTimeout(() => {
+          tab.view.webContents.executeJavaScript(PROBE_JS).then((probe) => {
+            result.probe = probe;
+            result.blocked = probe.bodyHasNotSecure && !probe.hasEmailInput && !probe.hasIdentifierInput;
+            finishSmoke(result, result.blocked ? 2 : 0);
+          }).catch((e) => {
+            result.error = `probe falló: ${e && e.message ? e.message : e}`;
+            finishSmoke(result, 1);
+          });
+        }, 6000);
       });
       tab.view.webContents.once('did-fail-load', (_e, code, desc) => {
         result.error = `did-fail-load ${code}: ${desc}`;
