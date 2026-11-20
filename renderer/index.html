@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office Express</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="chrome">
+  <div class="tabstrip" id="tabstrip" role="tablist" aria-label="Pestañas"></div>
+  <nav class="navbar" aria-label="Navegación">
+    <button id="btnBack" class="navbtn" type="button" aria-label="Atrás">←</button>
+    <button id="btnForward" class="navbtn" type="button" aria-label="Adelante">→</button>
+    <button id="btnReload" class="navbtn" type="button" aria-label="Recargar">↻</button>
+    <button id="btnHome" class="navbtn" type="button" aria-label="Inicio">⌂</button>
+    <div class="address" id="addressBar">Office Express — tus apps de Google en un solo lugar</div>
+    <button id="btnNewTab" class="navbtn primary" type="button" aria-label="Nueva pestaña">＋</button>
+  </nav>
+</header>
+
+<main class="home" id="homeView">
+  <section class="hero">
+    <img class="hero-logo" src="../assets/icon.png" alt="Office Express" width="96" height="96">
+    <div>
+      <h1>Office Express</h1>
+      <p>Toca una app para abrirla. Tu sesión de Google se guarda en este equipo.</p>
+    </div>
+  </section>
+
+  <section class="tiles" id="tiles" aria-label="Apps de Google"></section>
+
+  <footer class="home-foot">
+    <p>¿Primera vez? Toca una app e inicia sesión con tu cuenta de Google dentro de la app. No guardamos tu contraseña: la sesión vive en tu equipo.</p>
+  </footer>
+</main>
+
+<script src="renderer.js"></script>
+</body>
+</html>

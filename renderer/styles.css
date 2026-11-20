@@ -1,0 +1,264 @@
+/* Office Express — estilos compartidos (app Electron y versión web).
+ * Diseño táctil primero (estilo tablet):
+ * - Mosaicos de al menos 120 px, botones con área táctil mínima de 44 px.
+ * - Textos grandes y legibles, nada de controles chiquitos.
+ * - Paleta sobria azul oscuro / verde azulado, distinta a la de Google.
+ */
+:root {
+  --bg: #0b3d5c;
+  --bg-2: #0e4a6e;
+  --panel: #ffffff;
+  --ink: #102a3a;
+  --muted: #5b7280;
+  --accent: #0f766e;
+  --accent-2: #0e7490;
+  --line: #d7e3ea;
+  --tile: #f2f7f9;
+  --radius: 20px;
+  --tap: 56px; /* área táctil mínima de los botones principales */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* ---------- Barra superior (pestañas + navegación) ---------- */
+.chrome {
+  flex: 0 0 auto;
+  background: var(--bg);
+  color: #fff;
+  padding: 8px 12px 0;
+  user-select: none;
+}
+
+.tabstrip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  min-height: 56px;
+  align-items: stretch;
+  scrollbar-width: thin;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+  max-width: 260px;
+  min-height: 48px;
+  padding: 6px 8px 6px 14px;
+  border: 0;
+  border-radius: 14px 14px 0 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dceef6;
+  font-size: 17px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tab.active {
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.tab .tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab .tab-close {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tab .tab-close:active { background: rgba(0, 0, 0, 0.12); }
+
+.navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 4px 0 8px;
+}
+
+.navbtn {
+  flex: 0 0 auto;
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.navbtn:active { background: rgba(255, 255, 255, 0.32); }
+.navbtn:disabled { opacity: 0.35; cursor: default; }
+.navbtn.primary { background: var(--accent); font-size: 30px; }
+
+.address {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.10);
+  color: #dceef6;
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Home / lanzador de apps ---------- */
+.home {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--panel);
+  border-radius: 24px 24px 0 0;
+  padding: 28px clamp(16px, 4vw, 48px) 40px;
+}
+
+.home.hidden { display: none; }
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.hero-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  box-shadow: 0 6px 18px rgba(11, 61, 92, 0.25);
+}
+
+.hero h1 {
+  margin: 0 0 6px;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+  color: var(--bg);
+}
+
+.hero p {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 640px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 170px;
+  min-width: 120px;
+  padding: 22px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--tile);
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.tile:active { transform: scale(0.97); border-color: var(--accent); }
+
+.tile .tile-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--tile-color, var(--accent-2));
+}
+
+.tile .tile-icon svg { width: 38px; height: 38px; }
+
+.tile .tile-name {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tile .tile-desc {
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.home-foot {
+  margin-top: 30px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: #eef6f8;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.home-foot p { margin: 0; }
+
+.web-note {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: #fff7e6;
+  border: 2px solid #f0d48a;
+  color: #6b4e00;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.web-note p { margin: 0; }
+
+@media (max-width: 640px) {
+  .tiles { grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; }
+  .tile { min-height: 150px; }
+  .hero-logo { width: 72px; height: 72px; }
+  .address { font-size: 15px; }
+  .tab { min-width: 120px; font-size: 15px; }
+}
