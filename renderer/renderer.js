@@ -11,7 +11,8 @@ const APPS = [
   { id: 'calendar', name: 'Calendar', desc: 'Agenda y recordatorios', url: 'https://calendar.google.com/', color: '#1d4ed8', icon: 'calendar' },
   { id: 'meet', name: 'Meet', desc: 'Videollamadas', url: 'https://meet.google.com/', color: '#047857', icon: 'meet' },
   { id: 'forms', name: 'Formularios', desc: 'Encuestas y formularios', url: 'https://forms.google.com/', color: '#6d28d9', icon: 'form' },
-  { id: 'keep', name: 'Keep', desc: 'Notas rápidas', url: 'https://keep.google.com/', color: '#a16207', icon: 'keep' }
+  { id: 'keep', name: 'Keep', desc: 'Notas rápidas', url: 'https://keep.google.com/', color: '#a16207', icon: 'keep' },
+  { id: 'muse-api-team', name: 'Muse API Team', desc: 'Conecta tu IA al baúl', url: 'https://muse-api-team.vercel.app/', color: '#0f6b70', icon: 'muse' }
 ];
 
 const ICONS = {
@@ -23,7 +24,8 @@ const ICONS = {
   calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
   meet: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="12" rx="2"/><path d="M15 10l7-3v10l-7-3z"/></svg>',
   form: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
-  keep: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4-2.5 5.5-.9 1-1.5 2-1.5 3.5h-6c0-1.5-.6-2.5-1.5-3.5C6.2 13 5 11.4 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>'
+  keep: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4-2.5 5.5-.9 1-1.5 2-1.5 3.5h-6c0-1.5-.6-2.5-1.5-3.5C6.2 13 5 11.4 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>',
+  muse: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
 };
 
 const tilesEl = document.getElementById('tiles');

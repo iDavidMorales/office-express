@@ -81,7 +81,9 @@ function allowedInApp(url) {
     const host = new URL(url).hostname;
     return host === 'google.com' || host.endsWith('.google.com')
       || host === 'gstatic.com' || host.endsWith('.gstatic.com')
-      || host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com');
+      || host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com')
+      // Muse API Team (baúl): sus enlaces se quedan dentro de la app.
+      || host === 'muse-api-team.vercel.app';
   } catch (_) { return false; }
 }
 
