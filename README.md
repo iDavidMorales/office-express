@@ -92,7 +92,11 @@ npm run dist:mac    # solo macOS (dmg)
 
 Los artefactos quedan en `dist/`. Para crear el instalador Windows desde macOS se necesita Wine; si no está disponible, `dist:win:dir` produce `dist/win-unpacked/Office Express.exe` para copiar a una PC Windows. Para publicar un instalador, usa Windows o un runner Windows de GitHub Actions.
 
-El catálogo de enlaces vive en [`web/apps.js`](web/apps.js). Para agregar una app o sección, añade un objeto con `id`, `section`, `name`, `desc`, `url`, `color` e `icon`. Las secciones se generan solas; los iconos disponibles se enumeran al inicio de ese archivo. Los sitios agregados a la lista se abren como pestañas principales; para que sus ventanas emergentes permanezcan dentro de Electron, agrega su dominio permitido en `main.js`.
+El catálogo de respaldo vive en [`web/apps.js`](web/apps.js) y el catálogo remoto en [`web/apps.json`](web/apps.json). Para agregar una app o sección, añade el mismo objeto a ambos archivos con `id`, `section`, `name`, `desc`, `url`, `color` e `icon`. Al publicar `apps.json` en la rama `main`, las apps de escritorio actualizan la lista al conectarse; sin internet conservan el catálogo empacado. La web usa el JSON de su mismo origen. Los iconos disponibles se enumeran al inicio de `apps.js`. Los sitios agregados se abren como pestañas; para mantener sus ventanas emergentes dentro de Electron, agrega su dominio permitido en `main.js`.
+
+El indicador de conexión permite reintentar con **Actualizar apps** y se vuelve a comprobar cuando regresa la conexión. El preloader permanece visible 3.5 segundos para mostrar la marca y el progreso.
+
+Créditos de la app: **David Morales · [www.routicket.com](https://www.routicket.com) · +52 984 266 5680**.
 
 ## Versión web (Vercel)
 

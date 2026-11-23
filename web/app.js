@@ -4,11 +4,16 @@
  * Diferencia real: Google bloquea el iframe (X-Frame-Options), así que
  * cada mosaico abre su app en una pestaña nueva del navegador.
  */
-const APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
+let APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
 const preloader = document.getElementById('appPreloader');
 const progressTrack = preloader && preloader.querySelector('.progress-track');
 const progressFill = document.getElementById('preloaderProgress');
 const preloaderStatus = document.getElementById('preloaderStatus');
+const catalogStatus = document.getElementById('catalogStatus');
+const catalogStatusText = document.getElementById('catalogStatusText');
+const refreshCatalogButton = document.getElementById('refreshCatalog');
+const bootStartedAt = performance.now();
+const MIN_PRELOAD_MS = 3500;
 let bootProgress = 8;
 const bootTimer = setInterval(() => {
   bootProgress = Math.min(88, bootProgress + Math.max(2, Math.round((88 - bootProgress) * 0.12)));
@@ -18,10 +23,38 @@ const bootTimer = setInterval(() => {
 
 function finishPreloader() {
   clearInterval(bootTimer);
-  if (progressFill) progressFill.style.width = '100%';
-  if (progressTrack) progressTrack.setAttribute('aria-valuenow', '100');
-  if (preloaderStatus) preloaderStatus.textContent = 'Listo. Elige una app para empezar.';
-  window.setTimeout(() => preloader && preloader.classList.add('is-hidden'), 260);
+  const remaining = Math.max(0, MIN_PRELOAD_MS - (performance.now() - bootStartedAt));
+  window.setTimeout(() => {
+    if (progressFill) progressFill.style.width = '100%';
+    if (progressTrack) progressTrack.setAttribute('aria-valuenow', '100');
+    if (preloaderStatus) preloaderStatus.textContent = 'Listo. Elige una app para empezar.';
+    window.setTimeout(() => preloader && preloader.classList.add('is-hidden'), 300);
+  }, remaining);
+}
+
+function setCatalogStatus(state, message) {
+  if (catalogStatus) catalogStatus.dataset.state = state;
+  if (catalogStatusText) catalogStatusText.textContent = message;
+}
+
+function normalizeCatalog(rows) {
+  if (!Array.isArray(rows)) return [];
+  const seen = new Set();
+  return rows.slice(0, 80).filter((app) => {
+    if (!app || typeof app !== 'object' || !app.id || !app.name) return false;
+    let url;
+    try { url = new URL(String(app.url || '')); } catch (_) { return false; }
+    const id = String(app.id);
+    if (seen.has(id) || url.protocol !== 'https:') return false;
+    seen.add(id);
+    return true;
+  }).map((app) => ({
+    id: String(app.id), section: String(app.section || 'Aplicaciones').slice(0, 48),
+    name: String(app.name).slice(0, 64), desc: String(app.desc || '').slice(0, 140),
+    url: new URL(String(app.url)).href,
+    color: /^#[\da-f]{6}$/i.test(String(app.color || '')) ? String(app.color) : '#ffb347',
+    icon: String(app.icon || 'link').slice(0, 24)
+  }));
 }
 
 const ICONS = {
@@ -41,32 +74,84 @@ const ICONS = {
 };
 
 const tilesEl = document.getElementById('tiles');
-const sections = new Map();
-for (const app of APPS) {
-  const sectionName = String(app.section || 'Aplicaciones').trim() || 'Aplicaciones';
-  if (!sections.has(sectionName)) {
-    const section = document.createElement('section');
-    section.className = 'app-section';
-    const heading = document.createElement('h2');
-    heading.className = 'app-section-title';
-    heading.textContent = sectionName;
-    const grid = document.createElement('div');
-    grid.className = 'app-grid';
-    section.append(heading, grid);
-    tilesEl.appendChild(section);
-    sections.set(sectionName, grid);
+function renderCatalog(apps) {
+  APPS = normalizeCatalog(apps);
+  if (!APPS.length) return false;
+  tilesEl.replaceChildren();
+  const sectionGrids = new Map();
+  for (const app of APPS) {
+    const sectionName = String(app.section || 'Aplicaciones').trim() || 'Aplicaciones';
+    if (!sectionGrids.has(sectionName)) {
+      const section = document.createElement('section');
+      section.className = 'app-section';
+      const heading = document.createElement('h2');
+      heading.className = 'app-section-title';
+      heading.textContent = sectionName;
+      const grid = document.createElement('div');
+      grid.className = 'app-grid';
+      section.append(heading, grid);
+      tilesEl.appendChild(section);
+      sectionGrids.set(sectionName, grid);
+    }
+    const link = document.createElement('a');
+    link.className = 'tile';
+    link.href = app.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.title = 'Abrir ' + app.name;
+    link.style.setProperty('--tile-color', app.color);
+    const icon = document.createElement('span');
+    icon.className = 'tile-icon';
+    icon.innerHTML = ICONS[app.icon] || ICONS.link;
+    const name = document.createElement('span');
+    name.className = 'tile-name';
+    name.textContent = app.name;
+    const desc = document.createElement('span');
+    desc.className = 'tile-desc';
+    desc.textContent = app.desc;
+    link.append(icon, name, desc);
+    sectionGrids.get(sectionName).appendChild(link);
   }
-  const a = document.createElement('a');
-  a.className = 'tile';
-  a.href = app.url;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  a.style.setProperty('--tile-color', app.color);
-  a.innerHTML = '<span class="tile-icon">' + (ICONS[app.icon] || ICONS.link) + '</span>'
-    + '<span class="tile-name">' + app.name + '</span>'
-    + '<span class="tile-desc">' + app.desc + '</span>';
-  sections.get(sectionName).appendChild(a);
+  const appsMeta = document.getElementById('appsMeta');
+  if (appsMeta) appsMeta.textContent = `${APPS.length} accesos · ${sectionGrids.size} secciones`;
+  return true;
 }
-const appsMeta = document.getElementById('appsMeta');
-if (appsMeta) appsMeta.textContent = `${APPS.length} accesos · ${sections.size} secciones`;
-finishPreloader();
+
+async function refreshCatalog() {
+  if (refreshCatalogButton) {
+    refreshCatalogButton.disabled = true;
+    refreshCatalogButton.classList.add('is-loading');
+  }
+  setCatalogStatus('checking', 'Buscando apps actualizadas…');
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    const response = await fetch(new URL('apps.json', location.href), {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(2500)
+    });
+    if (!response.ok) throw new Error('catalog_unavailable');
+    const payload = await response.json();
+    const updated = renderCatalog(payload && payload.apps);
+    if (!updated) throw new Error('invalid_catalog');
+    setCatalogStatus('online', 'Conectado · catálogo actualizado');
+    if (preloaderStatus) preloaderStatus.textContent = 'Apps actualizadas. Preparando la ventana…';
+    return true;
+  } catch (_) {
+    setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles');
+    if (preloaderStatus) preloaderStatus.textContent = 'Sin internet. Abriremos tus apps guardadas…';
+    return false;
+  } finally {
+    if (refreshCatalogButton) {
+      refreshCatalogButton.disabled = false;
+      refreshCatalogButton.classList.remove('is-loading');
+    }
+  }
+}
+
+renderCatalog(APPS);
+setCatalogStatus('checking', 'Comprobando conexión…');
+refreshCatalogButton && refreshCatalogButton.addEventListener('click', refreshCatalog);
+window.addEventListener('offline', () => setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles'));
+window.addEventListener('online', refreshCatalog);
+refreshCatalog().finally(finishPreloader);

@@ -2,11 +2,16 @@
 /* Office Express — renderer (Electron).
  * Home táctil estilo tablet + barra de pestañas con botones grandes.
  */
-const APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
+let APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
 const preloader = document.getElementById('appPreloader');
 const progressTrack = preloader && preloader.querySelector('.progress-track');
 const progressFill = document.getElementById('preloaderProgress');
 const preloaderStatus = document.getElementById('preloaderStatus');
+const catalogStatus = document.getElementById('catalogStatus');
+const catalogStatusText = document.getElementById('catalogStatusText');
+const refreshCatalogButton = document.getElementById('refreshCatalog');
+const bootStartedAt = performance.now();
+const MIN_PRELOAD_MS = 3500;
 let bootProgress = 8;
 const bootTimer = setInterval(() => {
   bootProgress = Math.min(88, bootProgress + Math.max(2, Math.round((88 - bootProgress) * 0.12)));
@@ -16,10 +21,38 @@ const bootTimer = setInterval(() => {
 
 function finishPreloader() {
   clearInterval(bootTimer);
-  if (progressFill) progressFill.style.width = '100%';
-  if (progressTrack) progressTrack.setAttribute('aria-valuenow', '100');
-  if (preloaderStatus) preloaderStatus.textContent = 'Listo. Elige una app para empezar.';
-  window.setTimeout(() => preloader && preloader.classList.add('is-hidden'), 260);
+  const remaining = Math.max(0, MIN_PRELOAD_MS - (performance.now() - bootStartedAt));
+  window.setTimeout(() => {
+    if (progressFill) progressFill.style.width = '100%';
+    if (progressTrack) progressTrack.setAttribute('aria-valuenow', '100');
+    if (preloaderStatus) preloaderStatus.textContent = 'Listo. Elige una app para empezar.';
+    window.setTimeout(() => preloader && preloader.classList.add('is-hidden'), 300);
+  }, remaining);
+}
+
+function setCatalogStatus(state, message) {
+  if (catalogStatus) catalogStatus.dataset.state = state;
+  if (catalogStatusText) catalogStatusText.textContent = message;
+}
+
+function normalizeCatalog(rows) {
+  if (!Array.isArray(rows)) return [];
+  const seen = new Set();
+  return rows.slice(0, 80).filter((app) => {
+    if (!app || typeof app !== 'object' || !app.id || !app.name) return false;
+    let url;
+    try { url = new URL(String(app.url || '')); } catch (_) { return false; }
+    const id = String(app.id);
+    if (seen.has(id) || url.protocol !== 'https:') return false;
+    seen.add(id);
+    return true;
+  }).map((app) => ({
+    id: String(app.id), section: String(app.section || 'Aplicaciones').slice(0, 48),
+    name: String(app.name).slice(0, 64), desc: String(app.desc || '').slice(0, 140),
+    url: new URL(String(app.url)).href,
+    color: /^#[\da-f]{6}$/i.test(String(app.color || '')) ? String(app.color) : '#ffb347',
+    icon: String(app.icon || 'link').slice(0, 24)
+  }));
 }
 
 const ICONS = {
@@ -71,14 +104,59 @@ function renderTiles() {
     b.type = 'button';
     b.className = 'tile';
     b.style.setProperty('--tile-color', app.color);
-    b.innerHTML = '<span class="tile-icon">' + (ICONS[app.icon] || ICONS.link) + '</span>'
-      + '<span class="tile-name">' + app.name + '</span>'
-      + '<span class="tile-desc">' + app.desc + '</span>';
+    b.title = 'Abrir ' + app.name;
+    const icon = document.createElement('span');
+    icon.className = 'tile-icon';
+    icon.innerHTML = ICONS[app.icon] || ICONS.link;
+    const name = document.createElement('span');
+    name.className = 'tile-name';
+    name.textContent = app.name;
+    const desc = document.createElement('span');
+    desc.className = 'tile-desc';
+    desc.textContent = app.desc;
+    b.append(icon, name, desc);
     b.addEventListener('click', () => window.officeExpress.openApp(app.url, app.name));
     sections.get(sectionName).appendChild(b);
   }
   const meta = document.getElementById('appsMeta');
   if (meta) meta.textContent = `${APPS.length} accesos · ${sections.size} secciones`;
+}
+
+async function refreshCatalog() {
+  if (!window.officeExpress || typeof window.officeExpress.loadCatalog !== 'function') {
+    setCatalogStatus('offline', 'Desconectado · usando apps guardadas');
+    return false;
+  }
+  if (refreshCatalogButton) {
+    refreshCatalogButton.disabled = true;
+    refreshCatalogButton.classList.add('is-loading');
+  }
+  setCatalogStatus('checking', 'Buscando apps actualizadas…');
+  try {
+    const result = await window.officeExpress.loadCatalog();
+    const apps = normalizeCatalog(result && result.apps);
+    if (apps.length) {
+      APPS = apps;
+      renderTiles();
+    }
+    if (result && result.online && apps.length) {
+      setCatalogStatus('online', 'Conectado · catálogo actualizado');
+      if (preloaderStatus) preloaderStatus.textContent = 'Apps actualizadas. Preparando la ventana…';
+      return true;
+    }
+    setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles');
+    if (preloaderStatus) preloaderStatus.textContent = 'Sin internet. Abriremos tus apps guardadas…';
+    return false;
+  } catch (_) {
+    setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles');
+    if (preloaderStatus) preloaderStatus.textContent = 'Sin internet. Abriremos tus apps guardadas…';
+    return false;
+  } finally {
+    if (refreshCatalogButton) {
+      refreshCatalogButton.disabled = false;
+      refreshCatalogButton.classList.remove('is-loading');
+    }
+  }
 }
 
 function renderTabs(data) {
@@ -128,5 +206,10 @@ btnHome.addEventListener('click', () => window.officeExpress.goHome());
 btnNewTab.addEventListener('click', () => window.officeExpress.goHome());
 
 renderTiles();
-finishPreloader();
+setCatalogStatus('checking', 'Comprobando conexión…');
+refreshCatalogButton && refreshCatalogButton.addEventListener('click', refreshCatalog);
+window.addEventListener('offline', () => setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles'));
+window.addEventListener('online', refreshCatalog);
+const initialCatalogLoad = refreshCatalog();
+initialCatalogLoad.finally(finishPreloader);
 window.officeExpress.ready();

@@ -17,5 +17,7 @@ window.OFFICE_APPS = [
   { id: 'keep', section: 'Google Workspace', name: 'Keep', desc: 'Notas rápidas', url: 'https://keep.google.com/', color: '#a16207', icon: 'keep' },
   { id: 'muse-api-team', section: 'Herramientas', name: 'Muse API Team', desc: 'Conecta tu IA al baúl', url: 'https://muse-api-team.vercel.app/', color: '#0f6b70', icon: 'muse' },
   { id: 'canva', section: 'Creatividad', name: 'Canva', desc: 'Diseña presentaciones y contenido', url: 'https://www.canva.com/', color: '#7d2ae8', icon: 'design' },
-  { id: 'capcut', section: 'Creatividad', name: 'CapCut Web', desc: 'Edita videos en línea', url: 'https://www.capcut.com/editor', color: '#171717', icon: 'scissors' }
+  { id: 'capcut', section: 'Creatividad', name: 'CapCut Web', desc: 'Edita videos en línea', url: 'https://www.capcut.com/editor', color: '#171717', icon: 'scissors' },
+  { id: 'outlook', section: 'Microsoft 365', name: 'Outlook', desc: 'Correo, calendario y contactos', url: 'https://outlook.office.com/mail/', color: '#1769aa', icon: 'mail' },
+  { id: 'microsoft-365', section: 'Microsoft 365', name: 'Microsoft 365', desc: 'Abre Word, Excel y PowerPoint', url: 'https://www.microsoft365.com/', color: '#d14a27', icon: 'doc' }
 ];

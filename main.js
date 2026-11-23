@@ -7,7 +7,7 @@
  *   Electron del usuario y no se pierde al cerrar la app.
  * - Sin login propio y sin guardar contraseñas en la app.
  */
-const { app, BrowserWindow, BrowserView, ipcMain, session, shell } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, session, shell, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -15,6 +15,58 @@ const PARTITION = 'persist:office-express';
 const HOME_URL = 'https://docs.google.com/document/u/0/';
 const SMOKE_TEST = process.argv.includes('--smoke-test');
 const SMOKE_OUT = process.env.SMOKE_OUT || '/tmp/office-express-smoke.json';
+const REMOTE_CATALOG_URL = 'https://raw.githubusercontent.com/iDavidMorales/office-express/main/web/apps.json';
+const CATALOG_TIMEOUT_MS = 2500;
+
+function normalizeAppsCatalog(payload) {
+  const rows = Array.isArray(payload) ? payload : payload && payload.apps;
+  if (!Array.isArray(rows)) throw new Error('El catálogo no contiene una lista de apps.');
+  const seen = new Set();
+  const apps = [];
+  for (const row of rows.slice(0, 80)) {
+    if (!row || typeof row !== 'object') continue;
+    const id = String(row.id || '').trim();
+    const name = String(row.name || '').trim().slice(0, 64);
+    const desc = String(row.desc || '').trim().slice(0, 140);
+    const section = String(row.section || 'Aplicaciones').trim().slice(0, 48) || 'Aplicaciones';
+    let url;
+    try { url = new URL(String(row.url || '')); } catch (_) { continue; }
+    if (!/^[a-z0-9_-]{1,64}$/i.test(id) || seen.has(id) || !name || url.protocol !== 'https:') continue;
+    seen.add(id);
+    apps.push({
+      id, name, desc, section, url: url.href,
+      color: /^#[\da-f]{6}$/i.test(String(row.color || '')) ? String(row.color) : '#ffb347',
+      icon: String(row.icon || 'link').slice(0, 24)
+    });
+  }
+  if (!apps.length) throw new Error('El catálogo no contiene apps válidas.');
+  return apps;
+}
+
+async function loadAppsCatalog() {
+  let localApps = [];
+  try {
+    const localJson = fs.readFileSync(path.join(__dirname, 'web', 'apps.json'), 'utf8');
+    localApps = normalizeAppsCatalog(JSON.parse(localJson));
+  } catch (_) {}
+  try {
+    const response = await net.fetch(REMOTE_CATALOG_URL, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS),
+      headers: { Accept: 'application/json' }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    return {
+      apps: normalizeAppsCatalog(payload),
+      online: true,
+      source: 'remote',
+      updatedAt: String(payload.updated_at || '')
+    };
+  } catch (_) {
+    return { apps: localApps, online: false, source: 'local', updatedAt: '' };
+  }
+}
 
 // --- Identidad de Chrome para el inicio de sesión con Google ---
 // Google bloquea el sign-in desde navegadores embebidos ("This browser or
@@ -86,7 +138,14 @@ function allowedInApp(url) {
       || host === 'muse-api-team.vercel.app'
       // Herramientas creativas añadidas al lanzador.
       || host === 'canva.com' || host.endsWith('.canva.com')
-      || host === 'capcut.com' || host.endsWith('.capcut.com');
+      || host === 'capcut.com' || host.endsWith('.capcut.com')
+      // Microsoft 365 y los dominios de autenticación de Microsoft.
+      || host === 'office.com' || host.endsWith('.office.com')
+      || host === 'office365.com' || host.endsWith('.office365.com')
+      || host === 'microsoft365.com' || host.endsWith('.microsoft365.com')
+      || host === 'microsoft.com' || host.endsWith('.microsoft.com')
+      || host === 'microsoftonline.com' || host.endsWith('.microsoftonline.com')
+      || host === 'live.com' || host.endsWith('.live.com');
   } catch (_) { return false; }
 }
 
@@ -330,6 +389,7 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.on('renderer-ready', () => { homeReady = true; });
+ipcMain.handle('apps:load-catalog', () => loadAppsCatalog());
 ipcMain.on('open-app', (_e, { url, title }) => { if (url) createTab(url, title); });
 ipcMain.on('activate-tab', (_e, id) => activateTab(id));
 ipcMain.on('close-tab', (_e, id) => closeTab(id));

@@ -29,6 +29,7 @@
       "google-identity-preload.js",
       "renderer/**",
       "web/apps.js",
+      "web/apps.json",
       "assets/**",
       "package.json"
     ],
