@@ -84,17 +84,15 @@ npm start
 ## Generar los instaladores
 
 ```bash
-npm run dist        # Windows y Mac (según la plataforma)
-npm run dist:win    # solo Windows (instalador NSIS)
+npm run dist        # instalador de la plataforma actual
+npm run dist:win    # instalador Windows x64 (NSIS)
+npm run dist:win:dir # carpeta Windows sin instalador, ejecutable en Windows
 npm run dist:mac    # solo macOS (dmg)
 ```
 
-Los instaladores quedan en `dist/`.
+Los artefactos quedan en `dist/`. Para crear el instalador Windows desde macOS se necesita Wine; si no está disponible, `dist:win:dir` produce `dist/win-unpacked/Office Express.exe` para copiar a una PC Windows. Para publicar un instalador, usa Windows o un runner Windows de GitHub Actions.
 
-> Nota: el icono `assets/icon.png` (512×512) se sube al repo por la web
-> de GitHub, porque el push por API no admite archivos binarios. Sin él,
-> `npm run dist` usa el icono por defecto de Electron. El vector
-> `assets/icon.svg` sí está en el repo y es la fuente del logo.
+El catálogo de enlaces vive en [`web/apps.js`](web/apps.js). Para agregar una app o sección, añade un objeto con `id`, `section`, `name`, `desc`, `url`, `color` e `icon`. Las secciones se generan solas; los iconos disponibles se enumeran al inicio de ese archivo. Los sitios agregados a la lista se abren como pestañas principales; para que sus ventanas emergentes permanezcan dentro de Electron, agrega su dominio permitido en `main.js`.
 
 ## Versión web (Vercel)
 
@@ -115,7 +113,9 @@ preload.js                 Puente seguro renderer <-> main
 google-identity-preload.js Identidad Chrome en las pestañas (userAgentData + window.chrome)
 renderer/                  Home táctil + pestañas (index.html, styles.css, renderer.js)
 web/               Versión web estática (index.html, styles.css, app.js, vercel.json)
-assets/icon.png    Logo de la app (512×512, se sube por web de GitHub)
+web/apps.js        Catálogo compartido de apps y secciones para escritorio y web
+assets/icon.png    Icono raster de la app
+assets/icon.ico    Icono del instalador Windows
 assets/icon.svg    Logo en vector
 ```
 

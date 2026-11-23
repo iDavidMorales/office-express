@@ -4,18 +4,7 @@
  * Diferencia real: Google bloquea el iframe (X-Frame-Options), así que
  * cada mosaico abre su app en una pestaña nueva del navegador.
  */
-const APPS = [
-  { id: 'docs', name: 'Documentos', desc: 'Escribe y edita documentos', url: 'https://docs.google.com/document/u/0/', color: '#0e7490', icon: 'doc' },
-  { id: 'sheets', name: 'Hojas de cálculo', desc: 'Tablas y cálculos', url: 'https://sheets.google.com/', color: '#0f766e', icon: 'sheet' },
-  { id: 'slides', name: 'Presentaciones', desc: 'Diapositivas', url: 'https://slides.google.com/', color: '#155e75', icon: 'slide' },
-  { id: 'drive', name: 'Drive', desc: 'Tus archivos en la nube', url: 'https://drive.google.com/', color: '#0b3d5c', icon: 'drive' },
-  { id: 'gmail', name: 'Gmail', desc: 'Tu correo', url: 'https://mail.google.com/', color: '#b45309', icon: 'mail' },
-  { id: 'calendar', name: 'Calendar', desc: 'Agenda y recordatorios', url: 'https://calendar.google.com/', color: '#1d4ed8', icon: 'calendar' },
-  { id: 'meet', name: 'Meet', desc: 'Videollamadas', url: 'https://meet.google.com/', color: '#047857', icon: 'meet' },
-  { id: 'forms', name: 'Formularios', desc: 'Encuestas y formularios', url: 'https://forms.google.com/', color: '#6d28d9', icon: 'form' },
-  { id: 'keep', name: 'Keep', desc: 'Notas rápidas', url: 'https://keep.google.com/', color: '#a16207', icon: 'keep' },
-  { id: 'muse-api-team', name: 'Muse API Team', desc: 'Conecta tu IA al baúl', url: 'https://muse-api-team.vercel.app/', color: '#0f6b70', icon: 'muse' }
-];
+const APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
 
 const ICONS = {
   doc: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>',
@@ -27,19 +16,36 @@ const ICONS = {
   meet: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="12" rx="2"/><path d="M15 10l7-3v10l-7-3z"/></svg>',
   form: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   keep: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4-2.5 5.5-.9 1-1.5 2-1.5 3.5h-6c0-1.5-.6-2.5-1.5-3.5C6.2 13 5 11.4 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/></svg>',
-  muse: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+  muse: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  design: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m16 3 5 5M10 14l9-9 3 3-9 9-4 1z"/></svg>',
+  scissors: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="m8.2 8.2 12.3 12.3M14.5 9.5 20.5 3.5M8.2 15.8 12 12"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7L12 5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7L12 19"/></svg>'
 };
 
 const tilesEl = document.getElementById('tiles');
+const sections = new Map();
 for (const app of APPS) {
+  const sectionName = String(app.section || 'Aplicaciones').trim() || 'Aplicaciones';
+  if (!sections.has(sectionName)) {
+    const section = document.createElement('section');
+    section.className = 'app-section';
+    const heading = document.createElement('h2');
+    heading.className = 'app-section-title';
+    heading.textContent = sectionName;
+    const grid = document.createElement('div');
+    grid.className = 'app-grid';
+    section.append(heading, grid);
+    tilesEl.appendChild(section);
+    sections.set(sectionName, grid);
+  }
   const a = document.createElement('a');
   a.className = 'tile';
   a.href = app.url;
   a.target = '_blank';
   a.rel = 'noopener';
   a.style.setProperty('--tile-color', app.color);
-  a.innerHTML = '<span class="tile-icon">' + ICONS[app.icon] + '</span>'
+  a.innerHTML = '<span class="tile-icon">' + (ICONS[app.icon] || ICONS.link) + '</span>'
     + '<span class="tile-name">' + app.name + '</span>'
     + '<span class="tile-desc">' + app.desc + '</span>';
-  tilesEl.appendChild(a);
+  sections.get(sectionName).appendChild(a);
 }

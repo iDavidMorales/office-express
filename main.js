@@ -68,7 +68,7 @@ function configureGoogleSession() {
 const CHROME_HEIGHT = 128;
 
 app.setName('Office Express');
-if (process.platform === 'win32') app.setAppUserModelId('com.officeexpress.app');
+if (process.platform === 'win32') app.setAppUserModelId('com.routicket.officeexpress');
 
 let win = null;
 let tabs = []; // { id, title, url, view|null, isHome }
@@ -83,7 +83,10 @@ function allowedInApp(url) {
       || host === 'gstatic.com' || host.endsWith('.gstatic.com')
       || host === 'googleusercontent.com' || host.endsWith('.googleusercontent.com')
       // Muse API Team (baúl): sus enlaces se quedan dentro de la app.
-      || host === 'muse-api-team.vercel.app';
+      || host === 'muse-api-team.vercel.app'
+      // Herramientas creativas añadidas al lanzador.
+      || host === 'canva.com' || host.endsWith('.canva.com')
+      || host === 'capcut.com' || host.endsWith('.capcut.com');
   } catch (_) { return false; }
 }
 
@@ -216,7 +219,7 @@ function createWindow() {
     minHeight: 600,
     icon: path.join(__dirname, 'assets', 'icon.png'),
     title: 'Office Express',
-    backgroundColor: '#0b3d5c',
+    backgroundColor: '#0e1a2b',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

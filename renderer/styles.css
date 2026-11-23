@@ -2,18 +2,18 @@
  * Diseño táctil primero (estilo tablet):
  * - Mosaicos de al menos 120 px, botones con área táctil mínima de 44 px.
  * - Textos grandes y legibles, nada de controles chiquitos.
- * - Paleta sobria azul oscuro / verde azulado, distinta a la de Google.
+ * - Paleta Routicket: azul noche, dorado cálido y cyan.
  */
 :root {
-  --bg: #0b3d5c;
-  --bg-2: #0e4a6e;
+  --bg: #0e1a2b;
+  --bg-2: #15263b;
   --panel: #ffffff;
   --ink: #102a3a;
-  --muted: #5b7280;
-  --accent: #0f766e;
-  --accent-2: #0e7490;
-  --line: #d7e3ea;
-  --tile: #f2f7f9;
+  --muted: #63758a;
+  --accent: #ffb347;
+  --accent-2: #4adede;
+  --line: #d9e1ec;
+  --tile: #f5f7fb;
   --radius: 20px;
   --tap: 56px; /* área táctil mínima de los botones principales */
 }
@@ -119,7 +119,7 @@ body { display: flex; flex-direction: column; }
 
 .navbtn:active { background: rgba(255, 255, 255, 0.32); }
 .navbtn:disabled { opacity: 0.35; cursor: default; }
-.navbtn.primary { background: var(--accent); font-size: 30px; }
+.navbtn.primary { background: var(--accent); color: var(--bg); font-size: 30px; }
 
 .address {
   flex: 1;
@@ -178,6 +178,20 @@ body { display: flex; flex-direction: column; }
 }
 
 .tiles {
+  display: block;
+}
+
+.app-section { margin: 0 0 28px; }
+
+.app-section-title {
+  margin: 0 0 12px;
+  color: var(--bg);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 18px;
@@ -234,7 +248,7 @@ body { display: flex; flex-direction: column; }
   margin-top: 30px;
   padding: 18px 20px;
   border-radius: var(--radius);
-  background: #eef6f8;
+  background: #f1f4f8;
   color: var(--muted);
   font-size: 17px;
   line-height: 1.5;
@@ -246,9 +260,9 @@ body { display: flex; flex-direction: column; }
   margin-top: 18px;
   padding: 18px 20px;
   border-radius: var(--radius);
-  background: #fff7e6;
-  border: 2px solid #f0d48a;
-  color: #6b4e00;
+  background: #fff7e9;
+  border: 2px solid #f3d7a8;
+  color: #644317;
   font-size: 17px;
   line-height: 1.5;
 }
@@ -256,7 +270,7 @@ body { display: flex; flex-direction: column; }
 .web-note p { margin: 0; }
 
 @media (max-width: 640px) {
-  .tiles { grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; }
+  .app-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; }
   .tile { min-height: 150px; }
   .hero-logo { width: 72px; height: 72px; }
   .address { font-size: 15px; }
