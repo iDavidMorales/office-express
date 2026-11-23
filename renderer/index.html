@@ -7,6 +7,15 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="preloader" id="appPreloader" role="status" aria-live="polite" aria-label="Cargando Office Express">
+  <div class="preloader-card">
+    <img src="../assets/icon.svg" alt="" width="76" height="76">
+    <strong>Office Express</strong>
+    <span>Preparando tu espacio de trabajo</span>
+    <div class="progress-track" role="progressbar" aria-label="Carga de Office Express" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><i id="preloaderProgress"></i></div>
+    <small id="preloaderStatus">Cargando tus accesos…</small>
+  </div>
+</div>
 <header class="chrome">
   <div class="tabstrip" id="tabstrip" role="tablist" aria-label="Pestañas"></div>
   <nav class="navbar" aria-label="Navegación">
@@ -25,6 +34,7 @@
     <div>
       <h1>Office Express</h1>
       <p>Toca una app para abrirla. Tu sesión de Google se guarda en este equipo.</p>
+      <span class="hero-meta" id="appsMeta"></span>
     </div>
   </section>
 
