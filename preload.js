@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('officeExpress', {
   goForward: () => ipcRenderer.send('nav-forward'),
   reload: () => ipcRenderer.send('nav-reload'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
+  navigate: (url) => ipcRenderer.send('navigate', url),
   loadCatalog: () => ipcRenderer.invoke('apps:load-catalog'),
   onTabs: (cb) => ipcRenderer.on('tabs-updated', (_e, data) => cb(data)),
   onNavState: (cb) => ipcRenderer.on('nav-state', (_e, data) => cb(data))

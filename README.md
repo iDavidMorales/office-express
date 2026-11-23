@@ -87,16 +87,25 @@ npm start
 npm run dist        # instalador de la plataforma actual
 npm run dist:win    # instalador Windows x64 (NSIS)
 npm run dist:win:dir # carpeta Windows sin instalador, ejecutable en Windows
-npm run dist:mac    # solo macOS (dmg)
+npm run dist:mac    # macOS universal (Apple Silicon e Intel), DMG
+npm run dist:mac:arm64 # DMG solo Apple Silicon
+npm run dist:mac:x64   # DMG solo Intel
+npm run dist:all    # genera macOS y luego Windows
 ```
 
-Los artefactos quedan en `dist/`. Para crear el instalador Windows desde macOS se necesita Wine; si no está disponible, `dist:win:dir` produce `dist/win-unpacked/Office Express.exe` para copiar a una PC Windows. Para publicar un instalador, usa Windows o un runner Windows de GitHub Actions.
+Los artefactos quedan en `dist/`. El DMG se genera desde macOS. Para crear el instalador Windows desde macOS se necesita Wine; si no está disponible, `dist:win:dir` produce `dist/win-unpacked/Office Express.exe` para copiar a una PC Windows. Para publicar un instalador, usa Windows o un runner Windows de GitHub Actions.
+
+La salida macOS universal puede tardar y ocupar más espacio que una salida de una sola arquitectura. Para distribuir la app fuera de pruebas, configura un certificado **Developer ID Application** en el llavero y notarización de Apple; sin ellos el DMG se genera sin firma y macOS puede advertir al abrirlo. Los artefactos generados en `dist/` están excluidos de Git.
 
 El catálogo de respaldo vive en [`web/apps.js`](web/apps.js) y el catálogo remoto en [`web/apps.json`](web/apps.json). Para agregar una app o sección, añade el mismo objeto a ambos archivos con `id`, `section`, `name`, `desc`, `url`, `color` e `icon`. Al publicar `apps.json` en la rama `main`, las apps de escritorio actualizan la lista al conectarse; sin internet conservan el catálogo empacado. La web usa el JSON de su mismo origen. Los iconos disponibles se enumeran al inicio de `apps.js`. Los sitios agregados se abren como pestañas; para mantener sus ventanas emergentes dentro de Electron, agrega su dominio permitido en `main.js`.
 
-El indicador de conexión permite reintentar con **Actualizar apps** y se vuelve a comprobar cuando regresa la conexión. El preloader permanece visible 3.5 segundos para mostrar la marca y el progreso.
+En el lanzador de escritorio abre **Gestionar apps** para agregar, editar o eliminar apps y asignarlas a secciones. Los cambios se guardan localmente en ese equipo. **Descargar catálogo** crea `apps.json`; para distribuir los cambios a todos, reemplaza `web/apps.json` en el repo con ese archivo y publica la rama `main`. **Usar catálogo publicado** descarta los cambios locales y vuelve a cargar el catálogo remoto. Agregar dominios externos a la lista del catálogo no les concede acceso automático dentro de la ventana Electron: los nuevos dominios se abren en el navegador externo hasta agregarlos a `allowedInApp` en `main.js`.
 
-Créditos de la app: **David Morales · [www.routicket.com](https://www.routicket.com) · +52 984 266 5680**.
+El indicador de conexión permite reintentar con **Actualizar apps** y se vuelve a comprobar cuando regresa la conexión. El preloader mantiene la marca y la barra de progreso visibles durante 4 segundos.
+
+En la app de escritorio puedes escribir una URL o una búsqueda en la barra superior y presionar **Enter** para navegar en la pestaña activa.
+
+Créditos de la app: **David Morales · [www.routicket.com](https://www.routicket.com) · +52 984 266 5680 · xupplier@gmail.com · contacto@routicket.com**.
 
 ## Versión web (Vercel)
 

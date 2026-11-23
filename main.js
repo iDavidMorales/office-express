@@ -49,12 +49,14 @@ async function loadAppsCatalog() {
     const localJson = fs.readFileSync(path.join(__dirname, 'web', 'apps.json'), 'utf8');
     localApps = normalizeAppsCatalog(JSON.parse(localJson));
   } catch (_) {}
+  let remoteHostReached = false;
   try {
     const response = await net.fetch(REMOTE_CATALOG_URL, {
       cache: 'no-store',
       signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS),
       headers: { Accept: 'application/json' }
     });
+    remoteHostReached = true;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     return {
@@ -64,7 +66,7 @@ async function loadAppsCatalog() {
       updatedAt: String(payload.updated_at || '')
     };
   } catch (_) {
-    return { apps: localApps, online: false, source: 'local', updatedAt: '' };
+    return { apps: localApps, online: remoteHostReached, source: 'local', updatedAt: '' };
   }
 }
 
@@ -147,6 +149,25 @@ function allowedInApp(url) {
       || host === 'microsoftonline.com' || host.endsWith('.microsoftonline.com')
       || host === 'live.com' || host.endsWith('.live.com');
   } catch (_) { return false; }
+}
+
+function resolveAddress(rawAddress) {
+  const value = String(rawAddress || '').trim();
+  if (!value) return '';
+  const hasHttpScheme = /^https?:\/\//i.test(value);
+  const localAddress = /^(localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/i.test(value);
+  const hasHostLikeText = /^[^\s.]+\.[^\s]+/.test(value) || localAddress;
+  if (!hasHttpScheme && !hasHostLikeText) {
+    return 'https://www.google.com/search?q=' + encodeURIComponent(value);
+  }
+  const candidate = hasHttpScheme ? value : (localAddress ? 'http://' : 'https://') + value;
+  try {
+    const url = new URL(candidate);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return '';
+    return url.href;
+  } catch (_) {
+    return '';
+  }
 }
 
 function sendTabs() {
@@ -390,6 +411,19 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('renderer-ready', () => { homeReady = true; });
 ipcMain.handle('apps:load-catalog', () => loadAppsCatalog());
+ipcMain.on('navigate', (_e, rawAddress) => {
+  const url = resolveAddress(rawAddress);
+  if (!url) return;
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  if (activeTab && activeTab.view) {
+    activeTab.url = url;
+    activeTab.title = 'Cargando…';
+    activeTab.view.webContents.loadURL(url).catch(() => {});
+    sendTabs();
+    return;
+  }
+  createTab(url, 'Navegador');
+});
 ipcMain.on('open-app', (_e, { url, title }) => { if (url) createTab(url, title); });
 ipcMain.on('activate-tab', (_e, id) => activateTab(id));
 ipcMain.on('close-tab', (_e, id) => closeTab(id));
@@ -410,4 +444,9 @@ ipcMain.on('nav-reload', () => {
   const t = tabs.find(x => x.id === activeTabId);
   if (t && t.view) t.view.webContents.reload();
 });
-ipcMain.on('open-external', (_e, url) => { if (url) shell.openExternal(url); });
+ipcMain.on('open-external', (_e, rawUrl) => {
+  try {
+    const url = new URL(String(rawUrl || ''));
+    if (['https:', 'tel:', 'mailto:'].includes(url.protocol)) shell.openExternal(url.href);
+  } catch (_) {}
+});

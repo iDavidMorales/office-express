@@ -13,10 +13,11 @@ const catalogStatus = document.getElementById('catalogStatus');
 const catalogStatusText = document.getElementById('catalogStatusText');
 const refreshCatalogButton = document.getElementById('refreshCatalog');
 const bootStartedAt = performance.now();
-const MIN_PRELOAD_MS = 3500;
+const MIN_PRELOAD_MS = 4000;
 let bootProgress = 8;
 const bootTimer = setInterval(() => {
-  bootProgress = Math.min(88, bootProgress + Math.max(2, Math.round((88 - bootProgress) * 0.12)));
+  const elapsed = performance.now() - bootStartedAt;
+  bootProgress = Math.min(94, 8 + (elapsed / MIN_PRELOAD_MS) * 86);
   if (progressFill) progressFill.style.width = bootProgress + '%';
   if (progressTrack) progressTrack.setAttribute('aria-valuenow', String(bootProgress));
 }, 100);
@@ -123,6 +124,7 @@ async function refreshCatalog() {
     refreshCatalogButton.classList.add('is-loading');
   }
   setCatalogStatus('checking', 'Buscando apps actualizadas…');
+  let endpointReached = false;
   try {
     if (!navigator.onLine) throw new Error('offline');
     const response = await fetch(new URL('apps.json', location.href), {
@@ -130,6 +132,7 @@ async function refreshCatalog() {
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(2500)
     });
+    endpointReached = true;
     if (!response.ok) throw new Error('catalog_unavailable');
     const payload = await response.json();
     const updated = renderCatalog(payload && payload.apps);
@@ -138,6 +141,11 @@ async function refreshCatalog() {
     if (preloaderStatus) preloaderStatus.textContent = 'Apps actualizadas. Preparando la ventana…';
     return true;
   } catch (_) {
+    if (endpointReached) {
+      setCatalogStatus('online', 'Conectado · usando apps guardadas');
+      if (preloaderStatus) preloaderStatus.textContent = 'Catálogo guardado. Preparando la ventana…';
+      return true;
+    }
     setCatalogStatus('offline', 'Desconectado · apps de ejemplo disponibles');
     if (preloaderStatus) preloaderStatus.textContent = 'Sin internet. Abriremos tus apps guardadas…';
     return false;

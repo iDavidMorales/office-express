@@ -1,7 +1,7 @@
 /*
  * Catálogo editable de Office Express.
- * Para agregar enlaces, agrega un objeto con id, section, name, desc, url,
- * color e icon. Una section nueva crea automáticamente otro grupo visual.
+ * Para agregar enlaces, agrega el mismo objeto a este respaldo y a apps.json:
+ * id, section, name, desc, url, color e icon. Cada section crea un grupo.
  * Iconos disponibles: doc, sheet, slide, drive, mail, calendar, meet, form,
  * keep, muse, design, scissors y link.
  */

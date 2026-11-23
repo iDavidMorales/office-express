@@ -23,7 +23,7 @@
     <button id="btnForward" class="navbtn" type="button" aria-label="Adelante">→</button>
     <button id="btnReload" class="navbtn" type="button" aria-label="Recargar">↻</button>
     <button id="btnHome" class="navbtn" type="button" aria-label="Inicio">⌂</button>
-    <div class="address" id="addressBar">Office Express — tus apps de Google en un solo lugar</div>
+    <input id="addressBar" class="address" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" aria-label="Dirección web o búsqueda" placeholder="Escribe una dirección web o busca…" value="Office Express — tus apps de Google en un solo lugar">
     <button id="btnNewTab" class="navbtn primary" type="button" aria-label="Nueva pestaña">＋</button>
   </nav>
 </header>
@@ -42,11 +42,31 @@
     </div>
   </section>
 
+  <section class="catalog-manager" aria-labelledby="catalogManagerTitle">
+    <div class="manager-heading">
+      <div><h2 id="catalogManagerTitle">Administrar aplicaciones</h2><p>Agrega, edita o quita accesos. Los cambios se guardan en este equipo.</p></div>
+      <button class="refresh-btn" id="toggleCatalogManager" type="button" aria-expanded="false" aria-controls="catalogManagerPanel">Gestionar apps</button>
+    </div>
+    <div class="manager-panel" id="catalogManagerPanel" hidden>
+      <form id="appEditorForm" class="app-editor-form">
+        <label>Nombre<input name="name" maxlength="64" required placeholder="Ej. Notion"></label>
+        <label>Dirección web<input name="url" type="url" required placeholder="https://www.notion.so/"></label>
+        <label>Sección<input name="section" maxlength="48" required placeholder="Ej. Productividad"></label>
+        <label>Descripción<input name="desc" maxlength="140" placeholder="Para qué sirve"></label>
+        <label>Icono<select name="icon"><option value="link">Enlace</option><option value="doc">Documento</option><option value="sheet">Hoja de cálculo</option><option value="slide">Presentación</option><option value="drive">Drive</option><option value="mail">Correo</option><option value="calendar">Calendario</option><option value="meet">Videollamada</option><option value="form">Formulario</option><option value="keep">Notas</option><option value="design">Diseño</option><option value="scissors">Video</option><option value="muse">Muse</option></select></label>
+        <label>Color<input name="color" type="color" value="#0e7490"></label>
+        <div class="editor-actions"><button class="refresh-btn" id="saveAppEntry" type="submit">Agregar app</button><button class="refresh-btn secondary-btn" id="cancelAppEdit" type="button" hidden>Cancelar edición</button></div>
+      </form>
+      <div class="manager-toolbar"><span id="managerMessage" role="status">El catálogo publicado se actualiza al conectarte.</span><div><button class="refresh-btn secondary-btn" id="importCatalog" type="button">Importar JSON</button><button class="refresh-btn secondary-btn" id="exportCatalog" type="button">Descargar catálogo</button><button class="refresh-btn secondary-btn" id="resetCatalog" type="button">Usar catálogo publicado</button></div><input id="catalogFile" type="file" accept="application/json,.json" hidden></div>
+      <ul class="managed-app-list" id="managedAppList" aria-label="Apps del catálogo"></ul>
+    </div>
+  </section>
+
   <section class="tiles" id="tiles" aria-label="Apps de Google"></section>
 
   <footer class="home-foot">
     <p>¿Primera vez? Toca una app e inicia sesión con tu cuenta de Google dentro de la app. No guardamos tu contraseña: la sesión vive en tu equipo.</p>
-    <p class="brand-credit">Desarrollado por David Morales · <a href="https://www.routicket.com" target="_blank" rel="noopener">www.routicket.com</a> · <a href="tel:+529842665680">+52 984 266 5680</a></p>
+    <p class="brand-credit">Desarrollado por David Morales · <a href="https://www.routicket.com" target="_blank" rel="noopener">www.routicket.com</a> · <a href="tel:+529842665680">+52 984 266 5680</a><br><a href="mailto:xupplier@gmail.com">xupplier@gmail.com</a> · <a href="mailto:contacto@routicket.com">contacto@routicket.com</a></p>
   </footer>
 </main>
 

@@ -1,5 +1,10 @@
 {
-  "author": "Office Express",
+  "author": {
+    "name": "David Morales — Routicket",
+    "email": "contacto@routicket.com",
+    "url": "https://www.routicket.com"
+  },
+  "homepage": "https://www.routicket.com",
   "description": "Office Express — navegador ligero para Google Workspace (Documentos, Hojas de cálculo, Presentaciones, Drive, Gmail y más) en Windows y macOS.",
   "license": "MIT",
   "main": "main.js",
@@ -10,7 +15,10 @@
     "dist": "electron-builder",
     "dist:win": "electron-builder --win nsis --x64",
     "dist:win:dir": "electron-builder --win dir --x64",
-    "dist:mac": "electron-builder --mac dmg"
+    "dist:mac": "electron-builder --mac dmg --universal",
+    "dist:mac:arm64": "electron-builder --mac dmg --arm64",
+    "dist:mac:x64": "electron-builder --mac dmg --x64",
+    "dist:all": "npm run dist:mac && npm run dist:win"
   },
   "devDependencies": {
     "electron": "^33.2.1",
@@ -47,7 +55,9 @@
     },
     "mac": {
       "icon": "assets/icon.png",
-      "target": ["dmg"]
+      "category": "public.app-category.productivity",
+      "target": ["dmg"],
+      "artifactName": "Office-Express-${version}-${arch}.${ext}"
     }
   }
 }

@@ -188,7 +188,7 @@ body { display: flex; flex-direction: column; }
 .network-status[data-state="online"] .status-dot { background:#2bb673; box-shadow:0 0 0 4px rgba(43,182,115,.14); }
 .network-status[data-state="offline"] .status-dot { background:#df6b6b; box-shadow:0 0 0 4px rgba(223,107,107,.14); }
 .network-status[data-state="checking"] .status-dot { animation:statusPulse 1.1s ease-in-out infinite; }
-.refresh-btn { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 13px; border:1px solid #e3ad5c; border-radius:13px; background:#fff8ed; color:#714812; font:800 13px inherit; cursor:pointer; transition:transform .16s ease,background .16s ease,box-shadow .16s ease; }
+.refresh-btn { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 13px; border:1px solid #e3ad5c; border-radius:13px; background:#fff8ed; color:#714812; font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; transition:transform .16s ease,background .16s ease,box-shadow .16s ease; }
 .refresh-btn:hover { transform:translateY(-1px); background:#fff1d8; box-shadow:0 7px 16px rgba(113,72,18,.12); }
 .refresh-btn:focus-visible { outline:3px solid var(--accent-2); outline-offset:2px; }
 .refresh-btn:disabled { opacity:.7; cursor:wait; }
@@ -241,7 +241,7 @@ body { display: flex; flex-direction: column; }
   text-align: center;
 }
 
-.preloader-card img { border-radius: 20px; box-shadow: 0 10px 28px rgba(255,179,71,.18); }
+.preloader-card img { border-radius: 20px; box-shadow: 0 10px 28px rgba(255,179,71,.18); animation:preloaderPulse 1.8s ease-in-out infinite; }
 .preloader-card strong { font-size: 22px; letter-spacing: -.02em; }
 .preloader-card span,.preloader-card small { color: #bdcadd; font-size: 14px; }
 .progress-track { width: 100%; height: 9px; margin-top: 9px; overflow: hidden; border-radius: 99px; background: #26364b; }
@@ -282,6 +282,7 @@ body { display: flex; flex-direction: column; }
 @keyframes statusPulse { 50% { opacity:.45; transform:scale(.78); } }
 @keyframes progressShimmer { to { background-position:200% 0; } }
 @keyframes tileIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes preloaderPulse { 50% { transform:translateY(-3px) scale(1.025); } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
 
 .tile .tile-icon {
