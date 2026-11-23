@@ -4,10 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Office Express — tus apps de Google en un solo lugar</title>
-<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="preloader" id="appPreloader" role="status" aria-live="polite" aria-label="Cargando Office Express">
+  <div class="preloader-card">
+    <img src="icon.svg" alt="" width="76" height="76">
+    <strong>Office Express</strong>
+    <span>Preparando tu espacio de trabajo</span>
+    <div class="progress-track" role="progressbar" aria-label="Carga de Office Express" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><i id="preloaderProgress"></i></div>
+    <small id="preloaderStatus">Cargando tus accesos…</small>
+  </div>
+</div>
 <header class="chrome">
   <nav class="navbar" aria-label="Navegación">
     <div class="address">Office Express — tus apps de Google en un solo lugar</div>
@@ -16,10 +25,11 @@
 
 <main class="home" id="homeView">
   <section class="hero">
-    <img class="hero-logo" src="../assets/icon.svg" alt="Office Express" width="96" height="96">
+    <img class="hero-logo" src="icon.svg" alt="Office Express" width="96" height="96">
     <div>
       <h1>Office Express</h1>
       <p>Toca una app para abrirla en una pestaña nueva de tu navegador.</p>
+      <span class="hero-meta" id="appsMeta"></span>
     </div>
   </section>
 

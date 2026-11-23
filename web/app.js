@@ -5,6 +5,24 @@
  * cada mosaico abre su app en una pestaña nueva del navegador.
  */
 const APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
+const preloader = document.getElementById('appPreloader');
+const progressTrack = preloader && preloader.querySelector('.progress-track');
+const progressFill = document.getElementById('preloaderProgress');
+const preloaderStatus = document.getElementById('preloaderStatus');
+let bootProgress = 8;
+const bootTimer = setInterval(() => {
+  bootProgress = Math.min(88, bootProgress + Math.max(2, Math.round((88 - bootProgress) * 0.12)));
+  if (progressFill) progressFill.style.width = bootProgress + '%';
+  if (progressTrack) progressTrack.setAttribute('aria-valuenow', String(bootProgress));
+}, 100);
+
+function finishPreloader() {
+  clearInterval(bootTimer);
+  if (progressFill) progressFill.style.width = '100%';
+  if (progressTrack) progressTrack.setAttribute('aria-valuenow', '100');
+  if (preloaderStatus) preloaderStatus.textContent = 'Listo. Elige una app para empezar.';
+  window.setTimeout(() => preloader && preloader.classList.add('is-hidden'), 260);
+}
 
 const ICONS = {
   doc: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>',
@@ -49,3 +67,6 @@ for (const app of APPS) {
     + '<span class="tile-desc">' + app.desc + '</span>';
   sections.get(sectionName).appendChild(a);
 }
+const appsMeta = document.getElementById('appsMeta');
+if (appsMeta) appsMeta.textContent = `${APPS.length} accesos · ${sections.size} secciones`;
+finishPreloader();
