@@ -3,6 +3,8 @@
  * Home táctil estilo tablet + barra de pestañas con botones grandes.
  */
 let APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
+const REMOTE_CATALOG_URL = 'https://raw.githubusercontent.com/iDavidMorales/office-express/main/web/apps.json';
+let catalogBaseUrl = new URL('../web/apps.json', location.href).href;
 const preloader = document.getElementById('appPreloader');
 const progressTrack = preloader && preloader.querySelector('.progress-track');
 const progressFill = document.getElementById('preloaderProgress');
@@ -52,8 +54,40 @@ function normalizeCatalog(rows) {
     name: String(app.name).slice(0, 64), desc: String(app.desc || '').slice(0, 140),
     url: new URL(String(app.url)).href,
     color: /^#[\da-f]{6}$/i.test(String(app.color || '')) ? String(app.color) : '#ffb347',
-    icon: String(app.icon || 'link').slice(0, 24)
+    icon: String(app.icon || 'link').slice(0, 24),
+    icon_url: safeIconReference(app.icon_url)
   }));
+}
+
+function safeIconReference(value) {
+  const ref = String(value || '').trim().slice(0, 500);
+  if (!ref) return '';
+  if (/^https:\/\//i.test(ref)) return ref;
+  if (/^icons\/[a-z0-9_./-]+(?:\?[^\s]*)?$/i.test(ref) && !ref.split(/[/?]/).includes('..')) return ref;
+  return '';
+}
+
+function resolveIconUrl(iconReference) {
+  if (!iconReference) return '';
+  try {
+    const url = new URL(iconReference, catalogBaseUrl);
+    if (url.protocol === 'https:' || url.protocol === 'file:') return url.href;
+  } catch (_) {}
+  return '';
+}
+
+function paintTileIcon(container, app) {
+  container.replaceChildren();
+  const src = resolveIconUrl(app.icon_url);
+  if (src) {
+    const image = document.createElement('img');
+    image.className = 'tile-custom-icon';
+    image.alt = '';
+    image.loading = 'lazy';
+    image.src = src;
+    image.addEventListener('error', () => { image.remove(); container.innerHTML = ICONS[app.icon] || ICONS.link; }, { once: true });
+    container.appendChild(image);
+  } else container.innerHTML = ICONS[app.icon] || ICONS.link;
 }
 
 const ICONS = {
@@ -81,6 +115,8 @@ const btnForward = document.getElementById('btnForward');
 const btnReload = document.getElementById('btnReload');
 const btnHome = document.getElementById('btnHome');
 const btnNewTab = document.getElementById('btnNewTab');
+const quickMenu = document.getElementById('quickMenu');
+const btnQuickMenu = document.getElementById('btnQuickMenu');
 const catalogManagerPanel = document.getElementById('catalogManagerPanel');
 const toggleCatalogManager = document.getElementById('toggleCatalogManager');
 const appEditorForm = document.getElementById('appEditorForm');
@@ -89,6 +125,38 @@ const managerMessage = document.getElementById('managerMessage');
 const CATALOG_STORAGE_KEY = 'office-express.catalog-overrides.v1';
 let localCatalogOverride = readCatalogOverride();
 let editingAppId = '';
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  const dark = theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  if (themeToggle) {
+    themeToggle.setAttribute('aria-pressed', String(dark));
+    themeToggle.textContent = dark ? 'Cambiar a modo claro' : 'Activar modo nocturno';
+  }
+}
+applyTheme(localStorage.getItem('office-express.theme') || 'light');
+themeToggle.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('office-express.theme', next);
+  applyTheme(next);
+});
+btnQuickMenu.addEventListener('click', () => {
+  quickMenu.hidden = !quickMenu.hidden;
+  btnQuickMenu.setAttribute('aria-expanded', String(!quickMenu.hidden));
+});
+quickMenu.querySelectorAll('[data-external-url]').forEach((button) => {
+  button.addEventListener('click', () => {
+    window.officeExpress.openExternal(button.dataset.externalUrl);
+    quickMenu.hidden = true;
+    btnQuickMenu.setAttribute('aria-expanded', 'false');
+  });
+});
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.quick-menu-wrap') && !quickMenu.hidden) {
+    quickMenu.hidden = true;
+    btnQuickMenu.setAttribute('aria-expanded', 'false');
+  }
+});
 
 function readCatalogOverride() {
   try {
@@ -129,7 +197,7 @@ function renderManagedApps() {
     edit.type = 'button'; edit.className = 'refresh-btn secondary-btn'; edit.textContent = 'Editar';
     edit.addEventListener('click', () => {
       editingAppId = app.id;
-      for (const key of ['name', 'url', 'section', 'desc', 'icon', 'color']) appEditorForm.elements[key].value = app[key] || '';
+      for (const key of ['name', 'url', 'section', 'desc', 'icon', 'icon_url', 'color']) appEditorForm.elements[key].value = app[key] || '';
       document.getElementById('saveAppEntry').textContent = 'Guardar cambios';
       document.getElementById('cancelAppEdit').hidden = false;
       appEditorForm.elements.name.focus();
@@ -210,7 +278,7 @@ function renderTiles() {
     b.title = 'Abrir ' + app.name;
     const icon = document.createElement('span');
     icon.className = 'tile-icon';
-    icon.innerHTML = ICONS[app.icon] || ICONS.link;
+    paintTileIcon(icon, app);
     const name = document.createElement('span');
     name.className = 'tile-name';
     name.textContent = app.name;
@@ -239,6 +307,7 @@ async function refreshCatalog() {
     const result = await window.officeExpress.loadCatalog();
     const apps = normalizeCatalog(result && result.apps);
     if (apps.length) {
+      catalogBaseUrl = result && result.source === 'remote' ? REMOTE_CATALOG_URL : new URL('../web/apps.json', location.href).href;
       APPS = localCatalogOverride || apps;
       renderTiles();
       renderManagedApps();
@@ -343,7 +412,9 @@ appEditorForm.addEventListener('submit', (event) => {
     const parsed = new URL(url);
     if (!/^[a-z0-9_-]{1,64}$/i.test(id) || parsed.protocol !== 'https:') throw new Error('Usa una dirección HTTPS válida.');
     if (!editingAppId && APPS.some((app) => app.id === id)) throw new Error('Ya existe una app con ese nombre/ID.');
-    const entry = { id, name, section: String(data.get('section') || '').trim(), desc: String(data.get('desc') || '').trim(), url: parsed.href, color: String(data.get('color') || '#0e7490'), icon: String(data.get('icon') || 'link') };
+    const iconUrl = safeIconReference(data.get('icon_url'));
+    if (data.get('icon_url') && !iconUrl) throw new Error('Usa icons/nombre.svg o una URL HTTPS válida.');
+    const entry = { id, name, section: String(data.get('section') || '').trim(), desc: String(data.get('desc') || '').trim(), url: parsed.href, color: String(data.get('color') || '#0e7490'), icon: String(data.get('icon') || 'link'), icon_url: iconUrl };
     if (!entry.name || !entry.section) throw new Error('Completa nombre y sección.');
     const apps = editingAppId ? APPS.map((app) => app.id === editingAppId ? entry : app) : [...APPS, entry];
     if (saveCatalogOverride(apps, `${entry.name} se ${editingAppId ? 'actualizó' : 'agregó'} en este equipo.`)) resetAppEditor();

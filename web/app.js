@@ -5,6 +5,37 @@
  * cada mosaico abre su app en una pestaña nueva del navegador.
  */
 let APPS = Array.isArray(window.OFFICE_APPS) ? window.OFFICE_APPS : [];
+const catalogBaseUrl = new URL('apps.json', location.href).href;
+const quickMenu = document.getElementById('quickMenu');
+const btnQuickMenu = document.getElementById('btnQuickMenu');
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  const dark = theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  if (themeToggle) {
+    themeToggle.setAttribute('aria-pressed', String(dark));
+    themeToggle.textContent = dark ? 'Cambiar a modo claro' : 'Activar modo nocturno';
+  }
+}
+applyTheme(localStorage.getItem('office-express.theme') || 'light');
+if (themeToggle) themeToggle.addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('office-express.theme', next);
+  applyTheme(next);
+});
+if (btnQuickMenu && quickMenu) {
+  btnQuickMenu.addEventListener('click', () => {
+    quickMenu.hidden = !quickMenu.hidden;
+    btnQuickMenu.setAttribute('aria-expanded', String(!quickMenu.hidden));
+  });
+  quickMenu.querySelectorAll('a[data-external-url]').forEach((link) => { link.href = link.dataset.externalUrl; });
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.quick-menu-wrap') && !quickMenu.hidden) {
+      quickMenu.hidden = true;
+      btnQuickMenu.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 const preloader = document.getElementById('appPreloader');
 const progressTrack = preloader && preloader.querySelector('.progress-track');
 const progressFill = document.getElementById('preloaderProgress');
@@ -54,8 +85,31 @@ function normalizeCatalog(rows) {
     name: String(app.name).slice(0, 64), desc: String(app.desc || '').slice(0, 140),
     url: new URL(String(app.url)).href,
     color: /^#[\da-f]{6}$/i.test(String(app.color || '')) ? String(app.color) : '#ffb347',
-    icon: String(app.icon || 'link').slice(0, 24)
+    icon: String(app.icon || 'link').slice(0, 24),
+    icon_url: safeIconReference(app.icon_url)
   }));
+}
+
+function safeIconReference(value) {
+  const ref = String(value || '').trim().slice(0, 500);
+  if (!ref) return '';
+  if (/^https:\/\//i.test(ref)) return ref;
+  if (/^icons\/[a-z0-9_./-]+(?:\?[^\s]*)?$/i.test(ref) && !ref.split(/[/?]/).includes('..')) return ref;
+  return '';
+}
+
+function paintTileIcon(container, app) {
+  container.replaceChildren();
+  let src = '';
+  try {
+    const iconUrl = new URL(app.icon_url, catalogBaseUrl);
+    if (iconUrl.protocol === 'https:') src = iconUrl.href;
+  } catch (_) {}
+  if (!src) { container.innerHTML = ICONS[app.icon] || ICONS.link; return; }
+  const image = document.createElement('img');
+  image.className = 'tile-custom-icon'; image.alt = ''; image.loading = 'lazy'; image.src = src;
+  image.addEventListener('error', () => { image.remove(); container.innerHTML = ICONS[app.icon] || ICONS.link; }, { once: true });
+  container.appendChild(image);
 }
 
 const ICONS = {
@@ -103,7 +157,7 @@ function renderCatalog(apps) {
     link.style.setProperty('--tile-color', app.color);
     const icon = document.createElement('span');
     icon.className = 'tile-icon';
-    icon.innerHTML = ICONS[app.icon] || ICONS.link;
+    paintTileIcon(icon, app);
     const name = document.createElement('span');
     name.className = 'tile-name';
     name.textContent = app.name;

@@ -36,11 +36,20 @@ function normalizeAppsCatalog(payload) {
     apps.push({
       id, name, desc, section, url: url.href,
       color: /^#[\da-f]{6}$/i.test(String(row.color || '')) ? String(row.color) : '#ffb347',
-      icon: String(row.icon || 'link').slice(0, 24)
+      icon: String(row.icon || 'link').slice(0, 24),
+      icon_url: safeCatalogIconUrl(row.icon_url)
     });
   }
   if (!apps.length) throw new Error('El catálogo no contiene apps válidas.');
   return apps;
+}
+
+function safeCatalogIconUrl(value) {
+  const iconUrl = String(value || '').trim().slice(0, 500);
+  if (!iconUrl) return '';
+  if (/^https:\/\//i.test(iconUrl)) { try { return new URL(iconUrl).href; } catch (_) { return ''; } }
+  if (/^icons\/[a-z0-9_.\/-]+(?:\?[^\s]*)?$/i.test(iconUrl) && !iconUrl.split(/[/?]/).includes('..')) return iconUrl;
+  return '';
 }
 
 async function loadAppsCatalog() {

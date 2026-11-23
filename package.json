@@ -38,6 +38,7 @@
       "renderer/**",
       "web/apps.js",
       "web/apps.json",
+      "web/icons/**",
       "assets/**",
       "package.json"
     ],

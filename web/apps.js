@@ -19,5 +19,11 @@ window.OFFICE_APPS = [
   { id: 'canva', section: 'Creatividad', name: 'Canva', desc: 'Diseña presentaciones y contenido', url: 'https://www.canva.com/', color: '#7d2ae8', icon: 'design' },
   { id: 'capcut', section: 'Creatividad', name: 'CapCut Web', desc: 'Edita videos en línea', url: 'https://www.capcut.com/editor', color: '#171717', icon: 'scissors' },
   { id: 'outlook', section: 'Microsoft 365', name: 'Outlook', desc: 'Correo, calendario y contactos', url: 'https://outlook.office.com/mail/', color: '#1769aa', icon: 'mail' },
-  { id: 'microsoft-365', section: 'Microsoft 365', name: 'Microsoft 365', desc: 'Abre Word, Excel y PowerPoint', url: 'https://www.microsoft365.com/', color: '#d14a27', icon: 'doc' }
+  { id: 'microsoft-365', section: 'Microsoft 365', name: 'Microsoft 365', desc: 'Abre Word, Excel y PowerPoint', url: 'https://www.microsoft365.com/', color: '#d14a27', icon: 'doc' },
+  { id: 'facebook', section: 'Redes sociales', name: 'Facebook', desc: 'Publicaciones y comunidades', url: 'https://www.facebook.com/', color: '#1877f2', icon: 'link', icon_url: 'icons/facebook.svg' },
+  { id: 'instagram', section: 'Redes sociales', name: 'Instagram', desc: 'Fotos, reels e historias', url: 'https://www.instagram.com/', color: '#c13584', icon: 'link', icon_url: 'icons/instagram.svg' },
+  { id: 'youtube', section: 'Redes sociales', name: 'YouTube', desc: 'Videos y transmisiones', url: 'https://www.youtube.com/', color: '#ff0033', icon: 'link', icon_url: 'icons/youtube.svg' },
+  { id: 'tiktok', section: 'Redes sociales', name: 'TikTok', desc: 'Videos cortos y tendencias', url: 'https://www.tiktok.com/', color: '#161823', icon: 'link', icon_url: 'icons/tiktok.svg' },
+  { id: 'linkedin', section: 'Redes sociales', name: 'LinkedIn', desc: 'Red profesional', url: 'https://www.linkedin.com/', color: '#0a66c2', icon: 'link', icon_url: 'icons/linkedin.svg' },
+  { id: 'x-social', section: 'Redes sociales', name: 'X', desc: 'Noticias y conversaciones', url: 'https://x.com/', color: '#111111', icon: 'link', icon_url: 'icons/x.svg' }
 ];

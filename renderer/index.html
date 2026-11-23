@@ -25,6 +25,22 @@
     <button id="btnHome" class="navbtn" type="button" aria-label="Inicio">⌂</button>
     <input id="addressBar" class="address" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" aria-label="Dirección web o búsqueda" placeholder="Escribe una dirección web o busca…" value="Office Express — tus apps de Google en un solo lugar">
     <button id="btnNewTab" class="navbtn primary" type="button" aria-label="Nueva pestaña">＋</button>
+    <div class="quick-menu-wrap">
+      <button id="btnQuickMenu" class="navbtn quick-menu-button" type="button" aria-label="Abrir menú de Muse y redes sociales" aria-haspopup="true" aria-expanded="false">⋯</button>
+      <div class="quick-menu" id="quickMenu" hidden>
+        <strong>Muse</strong>
+        <button type="button" data-external-url="https://muse-api-team.vercel.app/">Muse API Team</button>
+        <button type="button" data-external-url="https://skiv.com/">Muse.ai · Skiv</button>
+        <strong>Redes sociales</strong>
+        <button type="button" data-external-url="https://www.facebook.com/">Facebook</button>
+        <button type="button" data-external-url="https://www.instagram.com/">Instagram</button>
+        <button type="button" data-external-url="https://www.youtube.com/">YouTube</button>
+        <button type="button" data-external-url="https://www.tiktok.com/">TikTok</button>
+        <button type="button" data-external-url="https://www.linkedin.com/">LinkedIn</button>
+        <button type="button" data-external-url="https://x.com/">X</button>
+        <button type="button" id="themeToggle" class="theme-menu-toggle" aria-pressed="false">Activar modo nocturno</button>
+      </div>
+    </div>
   </nav>
 </header>
 
@@ -54,6 +70,7 @@
         <label>Sección<input name="section" maxlength="48" required placeholder="Ej. Productividad"></label>
         <label>Descripción<input name="desc" maxlength="140" placeholder="Para qué sirve"></label>
         <label>Icono<select name="icon"><option value="link">Enlace</option><option value="doc">Documento</option><option value="sheet">Hoja de cálculo</option><option value="slide">Presentación</option><option value="drive">Drive</option><option value="mail">Correo</option><option value="calendar">Calendario</option><option value="meet">Videollamada</option><option value="form">Formulario</option><option value="keep">Notas</option><option value="design">Diseño</option><option value="scissors">Video</option><option value="muse">Muse</option></select></label>
+        <label class="custom-icon-field">Icono propio (opcional)<input name="icon_url" maxlength="500" placeholder="icons/notion.svg"><small>Sube el archivo a <code>web/icons/</code> en GitHub. También acepta URL HTTPS.</small></label>
         <label>Color<input name="color" type="color" value="#0e7490"></label>
         <div class="editor-actions"><button class="refresh-btn" id="saveAppEntry" type="submit">Agregar app</button><button class="refresh-btn secondary-btn" id="cancelAppEdit" type="button" hidden>Cancelar edición</button></div>
       </form>
